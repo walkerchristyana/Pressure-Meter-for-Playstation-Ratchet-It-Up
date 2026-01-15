@@ -1,15 +1,12 @@
-// script_ordered.js
-// Ordered flow: Loading -> Intro -> Classified -> Tutorial -> Allie (intro dialogue) -> Questions -> Meter -> Allie ending (2 paragraphs)
+//Loading -> Intro -> Classified -> Tutorial -> Allie (intro dialogue) -> Questions -> Meter -> Allie ending (2 paragraphs)
 // -> Port (same) -> Overall ending -> Leaderboard
-// Red/Black theme stays. Creepy text effects + sounds included.
+//DO NOT FORGET TO FIX THE ORDER!
 
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (id) => document.getElementById(id);
 
-  // ------------------------------------------------------------
-  // DEBUG VISIBILITY (hidden for submission)
-  // Enable with URL hash #debug OR typing the sequence D-E-B-U-G.
-  // ------------------------------------------------------------
+  // ------------------------------------------------------------ FINAL COPY FRFRFR 
+  // ------------------------------------------------------------ <33333333333
   const DEBUG_SEQ = ["d","e","b","u","g"];
   let debugBuffer = [];
 
@@ -138,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     requestAnimationFrame(tick);
   }
-
+//ERROR OCCCURED HERE CHECK IF AGAIN
   function loopAmbience(on) {
     if (!A.hum) return;
     try {
@@ -227,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Typewriter
+  // Typewriter FUNCTIONALITY GRLYPOP
   // -------------------------------
   async function type(el, text, speed = 18) {
     if (!el) return;
@@ -268,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const current = screens.find((s) => s.classList.contains("active"));
     if (current && current.id === id) return;
 
-    // Exit current screen
+    // Exit current screen//Exit scence
     if (current) {
       current.classList.remove("enter");
       current.classList.add("exit");
@@ -289,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Case file system
+  // Case file  Management (Note remember to make UI)
   // -------------------------------
   const player = { name: "", age: 0 };
 
@@ -371,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // Debug panel
+  // Debug panel/ NOT VISIBLE
   // -------------------------------
   debugBtn?.addEventListener("click", () => {
     safePlay(A.click, { restart: true });
@@ -404,7 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // Pressure labels + distortion
+  // Pressure labels + distortion + FOR ROOM ANGER AND HOSTILITY 
   // -------------------------------
   function pressureLabel(anger) {
     if (anger <= 1) return "calm";
@@ -420,12 +417,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Lie system + hint corruption
+  // Lie system + hint corruption SYSTEM  / three bugs in load check again
   // -------------------------------
   function clamp01(n){ return Math.max(0, Math.min(1, n)); }
   function scrambleText(s){
     const chars = String(s).split("");
-    for (let i = chars.length - 1; i > 0; i--) {
+    for (let i = chars.length - 1; i > 0; i--) { // check for loop, orignally big O error
       const j = Math.floor(Math.random() * (i + 1));
       [chars[i], chars[j]] = [chars[j], chars[i]];
     }
@@ -439,12 +436,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (q.forceTruth) return "truth";
     if (q.forceLie) return "lie";
-    if (q.denialTrigger) return "lie";
+    if (q.denialTrigger) return "lie";//error fixed
 
     const base = isAllie
       ? { lie: 0.18, half: 0.20, loop: 0.08, silence: 0.05 }
       : { lie: 0.24, half: 0.18, loop: 0.12, silence: 0.07 };
-
+//noted this is causing a error might debug 
     const toneBoost =
       q.tone === "safe" ? -0.18 :
       q.tone === "pressure" ? 0.10 :
@@ -532,14 +529,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Question Banks
+  // Question Banks// DO NOT EDIT OR CHANGE 
   // -------------------------------
   function makeQuestionBank(subject) {
     const isAllie = subject === "allie";
     if (isAllie) {
       return [
         {
-          id: "A1",
+          id: "A1", //CHANGE ALLIES CLOSET MONSTER TO A SHE #GIRLPOWER?
           label: "What happens when you’re alone in this room?",
           tone: "safe",
           truth: `Allie doesn’t blink. “When I’m alone, the room...heavier. Not like air—like pressure. Like something leaning in.”`,
@@ -638,7 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ];
     }
 
-    // PORT BANK (includes murder scene question)
+    // PORT BANK (includes murder scene of wife
     return [
       {
         id: "P1",
@@ -761,7 +758,7 @@ The room does.`,
   }
 
   // -------------------------------
-  // Scoring
+  // Scoring/SYSTEM
   // -------------------------------
   function scoreRow(label, guess, actual) {
     const diff = Math.abs((guess ?? 0) - (actual ?? 0));
@@ -863,7 +860,7 @@ The room does.`,
   }
 
   // -------------------------------
-  // Render Question Buttons
+  //  Question Buttons
   // -------------------------------
   function renderButtons(subject) {
     const isAllie = subject === "allie";
@@ -1019,7 +1016,7 @@ ${(q.lie || "").split(" ").slice(0, 6).join(" ")}...` :
             `...`;
 
           await setDialogue(subject, lieText.replaceAll("${NAME}", player.name));
-
+// fix error here 
           const obsPack =
             mode === "lie" ? q.obsLie :
             mode === "half" ? (q.obsLie || []).concat(["Dissonance detected: Stability drops."]) :
@@ -1117,7 +1114,7 @@ Awareness check: watching
 
 Do not rush.
 The room can tell.`;
-
+// introduction block error, fixed loading
   function buildLetterText() {
     return `[CLASSIFIED BRIEF]
 Operative: ${player.name || "UNKNOWN"}
@@ -1135,13 +1132,13 @@ Warning: Some spaces will lie back.`;
 
   // LOADING SCREEN: first thing you see
   type($("loadingText"), LOADING_TEXT, 14);
-
+//error froze fixed code here
   $("loadingContinueBtn")?.addEventListener("click", async () => {
     unlockAudioOnce();
     safePlay(A.click, { restart: true });
     staticFlash(120);
     showScreen("introScreen");
-    // Fallback if something prevents transition (should not happen, but protects demo)
+    // Fallback if something prevents transition (ai code to stop bugs from happenbing)
     setTimeout(() => {
       const a = document.querySelector(".screen.active");
       if (!a || a.id !== "introScreen") {

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mindscape: Pressure Meter</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <!-- HORROR LAYERS -->
+  <div id="staticOverlay" aria-hidden="true"></div>
+  <div id="redOverlay" aria-hidden="true"></div>
+  <div id="vignette" aria-hidden="true"></div>
+  <div id="scanlines" aria-hidden="true"></div>
+  <div id="fallZone" aria-hidden="true"></div>
+  <div id="takeoverText" aria-hidden="true"></div>
+  <div id="toast" aria-hidden="true"></div>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <div class="brand-title">MINDSCAPE</div>
+        <div class="brand-sub">Pressure Meter Protocol</div>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <button id="debugBtn" class="ghost-btn" title="Debug (for dev/testing)" type="button">Debug</button>
+      <button id="caseToggleBtn" class="case-btn" disabled type="button">Case File</button>
+    </div>
+  </header>
+
+  <!-- DEBUG PANEL -->
+  <aside id="debugPanel" class="debug-panel" aria-hidden="true" aria-hidden="true">
+    <div class="debug-head">
+      <div class="debug-title">DEBUG</div>
+      <button id="debugCloseBtn" class="ghost-btn" type="button">Close</button>
+    </div>
+    <div class="debug-body">
+      <div class="debug-row"><span>Active Screen:</span> <span id="dbgScreen">—</span></div>
+      <div class="debug-row"><span>Meter State:</span> <span id="dbgMeter">—</span></div>
+      <div class="debug-row"><span>Allie Pressure:</span> <span id="dbgAlliePressure">—</span></div>
+      <div class="debug-row"><span>Port Pressure:</span> <span id="dbgPortPressure">—</span></div>
+      <div class="debug-row"><span>Total Score:</span> <span id="dbgTotal">—</span></div>
+
+      <div class="debug-actions">
+        <button id="dbgTestAudioBtn" type="button">Test Audio</button>
+        <button id="dbgGiveAllieMeterBtn" type="button">Unlock Allie Meter</button>
+        <button id="dbgGivePortMeterBtn" type="button">Unlock Port Meter</button>
+        <button id="dbgClearLBBtn" type="button">Clear Leaderboard</button>
+      </div>
+
+      <div class="debug-small">Tip: browsers block autoplay. Audio unlocks after your first click.</div>
+    </div>
+  </aside>
+
+  <!-- CASE FILE PANEL -->
+  <aside id="casePanel" class="case-panel" aria-hidden="true">
+    <div class="case-head">
+      <div class="case-title">CASE FILE</div>
+      <button id="caseCloseBtn" class="ghost-btn" type="button">Close</button>
+    </div>
+
+    <div class="case-meta">
+      <div id="caseLockNotice" class="case-lock">Case file locked until calibration completes.</div>
+      <div id="caseOperativeLine" class="case-line">Operative: —</div>
+      <div id="caseToolLine" class="case-line">Tool: Pressure Meter</div>
+      <div id="caseMeterState" class="case-line">Meter State: LOCKED</div>
+      <div id="caseSubjectLine" class="case-line">Subject: —</div>
+      <div id="caseSubjectBrief" class="case-brief"></div>
+    </div>
+
+    <div class="case-logs-wrap">
+      <div class="case-logs-title">Observations</div>
+      <div id="caseLogs" class="case-logs"></div>
+    </div>
+  </aside>
+
+  <!-- SCREENS (ORDERED FLOW) -->
+  <main class="wrap">
+    <!-- 0) LOADING -->
+    <section id="loadingScreen" class="screen active">
+      <div class="card">
+        <h1 class="title">Loading</h1>
+        <pre id="loadingText" class="mono big-pre"></pre>
+        <button id="loadingContinueBtn" type="button">Continue</button>
+        <p class="hint">Click once to unlock sound.</p>
+      </div>
+    </section>
+
+    <!-- 1) INTRO -->
+    <section id="introScreen" class="screen">
+      <div class="card">
+        <h1 class="title">Mindscape</h1>
+        <p class="lead">You are the Mind Doctor. The room reacts to attention. The meter reads the space.</p>
+        <button id="introContinueBtn" type="button">Begin</button>
+      </div>
+    </section>
+
+    <!-- 2) CLASSIFIED FILE -->
+    <section id="letterScreen" class="screen">
+      <div class="card">
+        <h2 class="title">CLASSIFIED</h2>
+        <pre id="letterText" class="mono big-pre"></pre>
+        <button id="letterContinueBtn" type="button">Continue</button>
+      </div>
+    </section>
+
+    <!-- 3) SETUP -->
+    <section id="setupScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Calibration</h2>
+        <label class="field">
+          <span>Name</span>
+          <input id="playerName" placeholder="Operative"/>
+        </label>
+        <label class="field">
+          <span>Age</span>
+          <input id="playerAge" type="number" min="0" max="120" placeholder="0"/>
+        </label>
+        <button id="setupBtn" type="button">Start Calibration</button>
+      </div>
+    </section>
+
+    <!-- 4) TUTORIAL ABOUT ROOMS -->
+    <section id="tutorialScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Protocol</h2>
+        <pre id="tutorialText" class="mono big-pre"></pre>
+        <p id="tutorialHint" class="hint"></p>
+        <button id="tutorialNextBtn" type="button">Enter Subject 1</button>
+      </div>
+    </section>
+
+    <!-- 5) SUBJECT 1: ALLIE ENV -->
+    <section id="allieRoomScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Subject 1: Allie</h2>
+        <pre id="allieRoomText" class="mono big-pre"></pre>
+        <button id="approachAllieBtn" type="button">Approach</button>
+      </div>
+    </section>
+
+    <!-- 6) ALLIE QUESTIONS -->
+    <section id="allieQuestionsScreen" class="screen">
+      <div class="card wide">
+        <div class="hud">
+          <div id="allieProgressLine" class="hud-line">Questions: 0/6</div>
+          <div id="alliePressureLine" class="hud-line">Room Pressure: calm</div>
+        </div>
+
+        <div class="dialogue">
+          <div class="nameplate">Allie</div>
+          <pre id="allieDialogueText" class="mono dialogue-pre"></pre>
+          <div class="hintline"><span class="label">Hint:</span> <span id="allieHintText"></span></div>
+        </div>
+
+        <div id="allieQuestionButtons" class="buttons"></div>
+
+        <div class="footer-actions">
+          <button id="toAllieMeterBtn" class="danger" disabled type="button">Use Pressure Meter</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7) ALLIE METER -->
+    <section id="allieMeterScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Pressure Meter: Allie</h2>
+        <p id="allieMeterNudge" class="hint"></p>
+        <div class="meter-grid">
+          <label class="field"><span>Threat Presence (0-10)</span><input id="allieThreat" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Awareness (0-10)</span><input id="allieAwareness" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Stability (0-10)</span><input id="allieStability" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Resistance (0-10)</span><input id="allieResistance" type="number" min="0" max="10" value="0"/></label>
+        </div>
+        <button id="submitAllieBtn" type="button">Submit Reading</button>
+      </div>
+    </section>
+
+    <!-- 8) ALLIE ENDING (2 paragraphs) -->
+    <section id="allieEndingScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Allie: Outcome</h2>
+        <pre id="allieEndingText" class="mono big-pre"></pre>
+        <button id="toPortDossierBtn" type="button">Proceed to Subject 2</button>
+      </div>
+    </section>
+
+    <!-- 9) PORT DOSSIER -->
+    <section id="portDossierScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Subject 2: Port</h2>
+        <pre id="portDossierText" class="mono big-pre"></pre>
+        <button id="enterPortMindspaceBtn" type="button">Enter</button>
+      </div>
+    </section>
+
+    <!-- 10) PORT ENV -->
+    <section id="portRoomScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Port</h2>
+        <pre id="portRoomText" class="mono big-pre"></pre>
+        <button id="approachPortBtn" type="button">Approach</button>
+      </div>
+    </section>
+
+    <!-- 11) PORT QUESTIONS -->
+    <section id="portQuestionsScreen" class="screen">
+      <div class="card wide">
+        <div class="hud">
+          <div id="portProgressLine" class="hud-line">Questions: 0/6</div>
+          <div id="portPressureLine" class="hud-line">Room Pressure: calm</div>
+        </div>
+
+        <div class="dialogue">
+          <div class="nameplate">Port</div>
+          <pre id="portDialogueText" class="mono dialogue-pre"></pre>
+          <div class="hintline"><span class="label">Hint:</span> <span id="portHintText"></span></div>
+        </div>
+
+        <div id="portQuestionButtons" class="buttons"></div>
+
+        <div class="footer-actions">
+          <button id="toPortMeterBtn" class="danger" disabled type="button">Use Pressure Meter</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12) PORT METER -->
+    <section id="portMeterScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Pressure Meter: Port</h2>
+        <p id="portMeterNudge" class="hint"></p>
+        <div class="meter-grid">
+          <label class="field"><span>Threat Presence (0-10)</span><input id="portThreat" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Awareness (0-10)</span><input id="portAwareness" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Stability (0-10)</span><input id="portStability" type="number" min="0" max="10" value="0"/></label>
+          <label class="field"><span>Resistance (0-10)</span><input id="portResistance" type="number" min="0" max="10" value="0"/></label>
+        </div>
+        <button id="submitPortBtn" type="button">Submit Reading</button>
+      </div>
+    </section>
+
+    <!-- 13) PORT ENDING -->
+    <section id="portEndingScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Port: Outcome</h2>
+        <pre id="portEndingText" class="mono big-pre"></pre>
+        <button id="toFinalEndingBtn" type="button">Finalize</button>
+      </div>
+    </section>
+
+    <!-- 14) OVERALL ENDING -->
+    <section id="finalEndingScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Overall Outcome</h2>
+        <pre id="finalEndingText" class="mono big-pre"></pre>
+        <button id="toLeaderboardBtn" type="button">Leaderboard</button>
+      </div>
+    </section>
+
+    <!-- 15) LEADERBOARD -->
+    <section id="leaderboardScreen" class="screen">
+      <div class="card">
+        <h2 class="title">Leaderboard</h2>
+        <div class="lb-meta">
+          <div class="lb-line">Operative: <span id="lbName">—</span></div>
+          <div class="lb-line">Final Score: <span id="lbScore">0</span>/32</div>
+          <div class="lb-line">Ending: <span id="lbEnding">—</span></div>
+        </div>
+
+        <div class="subhead">Top Runs</div>
+        <div id="leaderboardList" class="lb"></div>
+
+        <div class="footer-actions">
+          <button id="restartBtn" class="ghost" type="button">Restart</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- AUDIO (match JS ids) -->
+  <audio id="buttonClick" src="click.wav" preload="auto"></audio>
+  <audio id="scoreSound" src="score.wav" preload="auto"></audio>
+  <audio id="monsterSound" src="monster.wav" preload="auto"></audio>
+  <audio id="ambienceHum" src="hum.wav" preload="auto" loop></audio>
+  <audio id="stingSound" src="sting.wav" preload="auto"></audio>
+  <audio id="scratchSound" src="scratch.wav" preload="auto"></audio>
+  <audio id="whisperSound" src="whisper.wav" preload="auto"></audio>
+  <audio id="heartbeatSound" src="heartbeat.wav" preload="auto" loop></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

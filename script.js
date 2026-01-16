@@ -1,12 +1,15 @@
-//Loading -> Intro -> Classified -> Tutorial -> Allie (intro dialogue) -> Questions -> Meter -> Allie ending (2 paragraphs)
+// script_ordered.js
+// Ordered flow: Loading -> Intro -> Classified -> Tutorial -> Allie (intro dialogue) -> Questions -> Meter -> Allie ending (2 paragraphs)
 // -> Port (same) -> Overall ending -> Leaderboard
-//DO NOT FORGET TO FIX THE ORDER!
+// Red/Black theme stays. Creepy text effects + sounds included.
 
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (id) => document.getElementById(id);
 
-  // ------------------------------------------------------------ FINAL COPY FRFRFR 
-  // ------------------------------------------------------------ <33333333333
+  // ------------------------------------------------------------
+  // DEBUG VISIBILITY (hidden for submission)
+  // Enable with URL hash #debug OR typing the sequence D-E-B-U-G.
+  // ------------------------------------------------------------
   const DEBUG_SEQ = ["d","e","b","u","g"];
   let debugBuffer = [];
 
@@ -135,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     requestAnimationFrame(tick);
   }
-//ERROR OCCCURED HERE CHECK IF AGAIN
+
   function loopAmbience(on) {
     if (!A.hum) return;
     try {
@@ -224,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Typewriter FUNCTIONALITY GRLYPOP
+  // Typewriter
   // -------------------------------
   async function type(el, text, speed = 18) {
     if (!el) return;
@@ -265,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const current = screens.find((s) => s.classList.contains("active"));
     if (current && current.id === id) return;
 
-    // Exit current screen//Exit scence
+    // Exit current screen
     if (current) {
       current.classList.remove("enter");
       current.classList.add("exit");
@@ -286,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Case file  Management (Note remember to make UI)
+  // Case file system
   // -------------------------------
   const player = { name: "", age: 0 };
 
@@ -368,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // Debug panel/ NOT VISIBLE
+  // Debug panel
   // -------------------------------
   debugBtn?.addEventListener("click", () => {
     safePlay(A.click, { restart: true });
@@ -401,7 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -------------------------------
-  // Pressure labels + distortion + FOR ROOM ANGER AND HOSTILITY 
+  // Pressure labels + distortion
   // -------------------------------
   function pressureLabel(anger) {
     if (anger <= 1) return "calm";
@@ -417,12 +420,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Lie system + hint corruption SYSTEM  / three bugs in load check again
+  // Lie system + hint corruption
   // -------------------------------
   function clamp01(n){ return Math.max(0, Math.min(1, n)); }
   function scrambleText(s){
     const chars = String(s).split("");
-    for (let i = chars.length - 1; i > 0; i--) { // check for loop, orignally big O error
+    for (let i = chars.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [chars[i], chars[j]] = [chars[j], chars[i]];
     }
@@ -436,12 +439,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (q.forceTruth) return "truth";
     if (q.forceLie) return "lie";
-    if (q.denialTrigger) return "lie";//error fixed
+    if (q.denialTrigger) return "lie";
 
     const base = isAllie
       ? { lie: 0.18, half: 0.20, loop: 0.08, silence: 0.05 }
       : { lie: 0.24, half: 0.18, loop: 0.12, silence: 0.07 };
-//noted this is causing a error might debug 
+
     const toneBoost =
       q.tone === "safe" ? -0.18 :
       q.tone === "pressure" ? 0.10 :
@@ -529,14 +532,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------
-  // Question Banks// DO NOT EDIT OR CHANGE 
+  // Question Banks
   // -------------------------------
   function makeQuestionBank(subject) {
     const isAllie = subject === "allie";
     if (isAllie) {
       return [
         {
-          id: "A1", //CHANGE ALLIES CLOSET MONSTER TO A SHE #GIRLPOWER?
+          id: "A1",
           label: "What happens when you’re alone in this room?",
           tone: "safe",
           truth: `Allie doesn’t blink. “When I’m alone, the room...heavier. Not like air—like pressure. Like something leaning in.”`,
@@ -635,7 +638,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ];
     }
 
-    // PORT BANK (includes murder scene of wife
+    // PORT BANK (includes murder scene question)
     return [
       {
         id: "P1",
@@ -758,7 +761,7 @@ The room does.`,
   }
 
   // -------------------------------
-  // Scoring/SYSTEM
+  // Scoring
   // -------------------------------
   function scoreRow(label, guess, actual) {
     const diff = Math.abs((guess ?? 0) - (actual ?? 0));
@@ -766,11 +769,42 @@ The room does.`,
     return { label, guess, actual, diff, points };
   }
 
-  function endingKeyFromScore(total, zeros) {
-    if (total >= 14 && zeros === 0) return "safe";
-    if (total >= 11) return "contained";
-    if (total >= 8) return "fracture";
-    return "breach";
+  // ------------------------------------------------------------
+  // Ending tiers (per subject)
+  // We combine System 1 (question tone/pressure) + System 2 (meter accuracy).
+  // The goal is: every tier is reachable during a normal playthrough.
+  //
+  // Meter score is 0..16 (4 stats, up to 4 pts each).
+  // Pressure ("anger") rises when you ask provoking/assumptive questions.
+  // Asked count is capped by unlockAt.
+  function subjectTierFromSystems({ meterTotal, asked, pressure }) {
+    // Best: strong meter read + you kept agency (low pressure) + you gathered enough info
+    if (meterTotal >= 14 && pressure <= 1 && asked >= state.unlockAt) return "best";
+    // Good: solid meter read OR good info gathering with mild pressure
+    if (meterTotal >= 11 && pressure <= 3) return "good";
+    // Partial: you got some things right, but missing info or consistency
+    if (meterTotal >= 8) return "partial";
+    // Worst: misread + low info / high pressure
+    return "worst";
+  }
+
+  function pointsBreakdownFromGuess(guess, actual) {
+    const rows = [
+      scoreRow("Threat Presence", guess.threat, actual.threat),
+      scoreRow("Awareness", guess.awareness, actual.awareness),
+      scoreRow("Stability", guess.stability, actual.stability),
+      scoreRow("Resistance", guess.resistance, actual.resistance),
+    ];
+    const total = rows.reduce((a, r) => a + r.points, 0);
+    return { rows, total };
+  }
+
+  function overallEndingKeyFromMini(allieTier, portTier) {
+    // 4 major endings
+    if (allieTier === "best" && portTier === "best") return "TRUE_RESOLUTION";
+    if (allieTier === "worst" || portTier === "worst") return "FRACTURE";
+    if ((allieTier === "good" || allieTier === "best") && (portTier === "good" || portTier === "best")) return "RESTORED";
+    return "UNRESOLVED";
   }
 
   function compute(guess, actual) {
@@ -860,7 +894,7 @@ The room does.`,
   }
 
   // -------------------------------
-  //  Question Buttons
+  // Render Question Buttons
   // -------------------------------
   function renderButtons(subject) {
     const isAllie = subject === "allie";
@@ -1016,7 +1050,7 @@ ${(q.lie || "").split(" ").slice(0, 6).join(" ")}...` :
             `...`;
 
           await setDialogue(subject, lieText.replaceAll("${NAME}", player.name));
-// fix error here 
+
           const obsPack =
             mode === "lie" ? q.obsLie :
             mode === "half" ? (q.obsLie || []).concat(["Dissonance detected: Stability drops."]) :
@@ -1114,7 +1148,7 @@ Awareness check: watching
 
 Do not rush.
 The room can tell.`;
-// introduction block error, fixed loading
+
   function buildLetterText() {
     return `[CLASSIFIED BRIEF]
 Operative: ${player.name || "UNKNOWN"}
@@ -1132,13 +1166,13 @@ Warning: Some spaces will lie back.`;
 
   // LOADING SCREEN: first thing you see
   type($("loadingText"), LOADING_TEXT, 14);
-//error froze fixed code here
+
   $("loadingContinueBtn")?.addEventListener("click", async () => {
     unlockAudioOnce();
     safePlay(A.click, { restart: true });
     staticFlash(120);
     showScreen("introScreen");
-    // Fallback if something prevents transition (ai code to stop bugs from happenbing)
+    // Fallback if something prevents transition (should not happen, but protects demo)
     setTimeout(() => {
       const a = document.querySelector(".screen.active");
       if (!a || a.id !== "introScreen") {
@@ -1254,34 +1288,42 @@ The room listens.`);
       resistance: clampNum($("allieResistance").value),
     };
 
-    const allieActual = { threat: 7, awareness: 8, stability: 3, resistance: 6 };
-    const { total, zeros } = compute(g, allieActual);
+    // True room measurements (hidden from the player)
+    const allieActual = { threat: 2, awareness: 5, stability: 7, resistance: 4 };
+    const { total } = pointsBreakdownFromGuess(g, allieActual);
 
-    state.allieScore = total;
-    state.allieEndingKey = endingKeyFromScore(total, zeros);
+    state.allieScore = total; // 0..16
+    state.allieEndingKey = subjectTierFromSystems({
+      meterTotal: total,
+      asked: state.allieAsked,
+      pressure: state.allieAnger,
+    });
 
     safePlay(A.score, { restart: true, volume: 0.55 });
 
     showScreen("allieEndingScreen");
 
-    const para1 =
-      state.allieEndingKey === "safe"
-        ? "Your reading lands gently. The corner stops pushing back, just for a second, like the room is surprised you didn’t try to win. Allie’s shoulders drop, and the air feels less crowded."
-      : state.allieEndingKey === "contained"
-        ? "Your reading is careful, not perfect. The room still watches you, but it doesn’t lunge. Allie exhales in a way that sounds like relief and fear at the same time."
-      : state.allieEndingKey === "fracture"
-        ? "Your certainty shakes the space. The closet creaks like it’s laughing. The corner feels closer, not because it moved—because you named it wrong."
-        : "You misread the room and it learns you. The air thickens. The corner becomes an audience. Allie flinches like she heard your thoughts out loud.";
+    const ALLIE_ENDINGS = {
+      best: [
+        "The Pressure Meter stops flickering and settles into a steady pulse. The room exhales like it has been holding its breath for years, and the walls stop bracing for impact. Allie finally speaks without flinching, like she is allowed to exist without being interpreted into something worse.",
+        "When the exit opens, it is not dramatic. It is simply there. She steps through with her shoulders low, not because she is defeated, but because she is no longer guarding herself from your assumptions."
+      ],
+      good: [
+        "The Pressure Meter calms, but it never fully steadies. The room stays mostly intact, yet corners still twitch as if they are expecting you to change your mind. Allie answers you, but she chooses her words carefully, like she is trying to protect herself from being misunderstood again.",
+        "The way out appears, and she takes it, but the Mindscape does not fully dissolve. You helped her escape, but you did not fully understand what you were holding in your hands."
+      ],
+      partial: [
+        "The Pressure Meter reads safe, but it feels forced, like you pressed the needle down with your thumb. The room becomes smaller and quieter, not calmer, and Allie’s voice gets thinner as the Mindscape reacts to pressure it did not need. The environment obeys, but it is not healed.",
+        "Allie leaves, but she leaves muted. The exit opens like a mercy, not a resolution, and the Mindscape stays behind you with the lingering feeling that you treated caution like danger."
+      ],
+      worst: [
+        "The Pressure Meter spikes hard, and the room turns defensive fast, like it heard your assumptions before you spoke them. The walls narrow, the air sharpens, and Allie stops offering truth the moment she realizes you already decided what she is. The Mindscape does not attack, it withdraws.",
+        "The exit does not open cleanly. It tears. Allie slips out like someone escaping a label, not a place, and the Mindscape closes behind her with a final message you cannot unsee: you never asked who she was, you asked what she was hiding."
+      ]
+    };
 
-    const para2 =
-      `Allie whispers:
-“Don’t take it personally. It just… collects people who guess.”
-
-Your meter ticks once. Like a warning. Like a memory.`;
-
-    await type($("allieEndingText"), `${para1}
-
-${para2}`, 14);
+    const [p1, p2] = ALLIE_ENDINGS[state.allieEndingKey] || ALLIE_ENDINGS.partial;
+    await type($("allieEndingText"), `${p1}\n\n${p2}`, 12);
   });
 
   // ALLIE ENDING -> PORT DOSSIER
@@ -1358,67 +1400,87 @@ Like it’s pleased.`);
       resistance: clampNum($("portResistance").value),
     };
 
-    const portActual = { threat: 6, awareness: 9, stability: 2, resistance: 8 };
-    const { total, zeros } = compute(g, portActual);
+    // True room measurements (hidden from the player)
+    const portActual = { threat: 8, awareness: 7, stability: 4, resistance: 8 };
+    const { total } = pointsBreakdownFromGuess(g, portActual);
 
-    state.portScore = total;
-    state.portEndingKey = endingKeyFromScore(total, zeros);
+    state.portScore = total; // 0..16
+    state.portEndingKey = subjectTierFromSystems({
+      meterTotal: total,
+      asked: state.portAsked,
+      pressure: state.portAnger,
+    });
 
     safePlay(A.score, { restart: true, volume: 0.55 });
 
     showScreen("portEndingScreen");
 
-    const para1 =
-      state.portEndingKey === "safe"
-        ? "You read the pattern without feeding it. The loop stutters—just once—like the hallway is confused that you didn’t chase the bait."
-      : state.portEndingKey === "contained"
-        ? "You don’t fix the loop, but you don’t empower it either. The sound keeps repeating, but it feels… farther away."
-      : state.portEndingKey === "fracture"
-        ? "Your reading gives the loop a new rhythm. The hallway likes your mistake. It repeats it with pride."
-        : "You become part of the pattern. Port’s smile feels practiced, and the hallway answers for him.";
+    const PORT_ENDINGS = {
+      best: [
+        "The Pressure Meter doesn’t calm, it stabilizes, like a storm finally contained in a circle instead of a cage. The room stops pretending, and Port stops performing. The Mindscape becomes honest, loud, and structured, like it respects you for recognizing pressure without flinching.",
+        "When the exit forms, it feels earned. Port steps through with the kind of relief that comes from being seen at full intensity, not being told to tone it down."
+      ],
+      good: [
+        "The Pressure Meter holds steady most of the time, but it still surges in waves. The room stays functional, yet you can feel how close it is to slipping. Port gives you answers, but he keeps checking to see if you can handle what he is about to admit.",
+        "The exit opens and he takes it, but the Mindscape does not fully settle. You helped him get out, but part of him is still bracing, still expecting to be dismissed the moment he gets too real."
+      ],
+      partial: [
+        "The Pressure Meter reads high, and you treat the room like a problem to contain instead of a person to understand. The Mindscape becomes rigid, overly structured, and sharp, like a jaw clenched too long. Port cooperates, but only in the way someone does when they have learned that resistance makes things worse.",
+        "The exit appears, but it feels cold. He leaves, but not lighter, and the Mindscape remains intact behind you like a warning: control can look like stability if you do not ask what it costs."
+      ],
+      worst: [
+        "The Pressure Meter starts screaming, but you keep reading it like background noise. The Mindscape takes that as permission to break. Rooms fold, lights stutter, and the environment becomes unpredictable because it was never calm, it was contained. Port tries to speak, but the space interrupts him like it is tired of being minimized.",
+        "The exit does not open. It fractures into false doors and dead ends. When you finally get out, it is alone, and the last thing the Pressure Meter shows is a number that feels like an accusation."
+      ]
+    };
 
-    const para2 =
-      `Port says:
-“Lies are doors.”
-
-The meter ticks like footsteps behind you.`;
-
-    await type($("portEndingText"), `${para1}
-
-${para2}`, 14);
+    const [p1, p2] = PORT_ENDINGS[state.portEndingKey] || PORT_ENDINGS.partial;
+    await type($("portEndingText"), `${p1}\n\n${p2}`, 12);
   });
 
   // OVERALL ENDING + SCORE + SAVE LEADERBOARD
   $("toFinalEndingBtn")?.addEventListener("click", async () => {
     safePlay(A.click, { restart: true });
 
-    state.totalScore = state.allieScore + state.portScore;
+    state.totalScore = state.allieScore + state.portScore; // 0..32
 
-    if (state.totalScore >= 26) state.finalEndingKey = "CLEAN EXIT";
-    else if (state.totalScore >= 20) state.finalEndingKey = "CONTAINED";
-    else if (state.totalScore >= 14) state.finalEndingKey = "FRACTURE";
-    else state.finalEndingKey = "BREACH";
+    // 4 major endings are based on the two mini endings (Allie + Port)
+    state.finalEndingKey = overallEndingKeyFromMini(state.allieEndingKey, state.portEndingKey);
 
     showScreen("finalEndingScreen");
 
-    const endingText =
-      state.finalEndingKey === "CLEAN EXIT" ? "You leave with your name still yours." :
-      state.finalEndingKey === "CONTAINED" ? "You leave, but it follows at a distance." :
-      state.finalEndingKey === "FRACTURE" ? "You leave, and something leaves with you." :
-      "You do not leave. You only change rooms.";
+    const FINAL_ENDINGS = {
+      TRUE_RESOLUTION: [
+        "You leave the Mindscape with the Pressure Meter quiet in your hand, not because nothing happened, but because you finally listened long enough for the room to stop defending itself. You did not win. You understood. That difference matters in places like this.",
+        "Outside, the world feels normal again, but you are not. The scoreboard does not praise you with noise. It just confirms what the Mindscape already knew: you earned clarity by refusing to assume."
+      ],
+      RESTORED: [
+        "You got them out. Both of them. The Pressure Meter shows stability, but not peace, like a stitched wound that still aches when it rains. You made enough careful choices to keep the Mindscape from taking more than it needed.",
+        "The final readout looks decent, but the endings feel unfinished. You did good work, but some rooms remember how you entered them, and some truths do not fully return once they have been pressured into silence."
+      ],
+      UNRESOLVED: [
+        "One Mindscape settled. The other stayed tense. The Pressure Meter reflects that imbalance like a scale that never leveled out. You asked some good questions, but you also rushed, and the Mindscape punished your impatience by limiting what it would show you.",
+        "When the game ends, it does not feel like closure. It feels like leaving mid conversation. The final score is not cruel, it is honest: you got results, but not understanding."
+      ],
+      FRACTURE: [
+        "The Pressure Meter ends the game loud. Not broken, not wrong, just loud, like it is trying to speak over every assumption you made. The Mindscape did not become a monster. It became a mirror, and you did not like what it reflected back.",
+        "You finish the game, but it does not finish with you. The final screen stays red and still, and the last message sits there like a file stamp: you cannot help someone escape if you keep deciding what they are before they speak."
+      ]
+    };
 
-    if (state.finalEndingKey === "BREACH") {
+    const [f1, f2] = FINAL_ENDINGS[state.finalEndingKey] || FINAL_ENDINGS.UNRESOLVED;
+
+    // Strong horror takeover only on FRACTURE
+    if (state.finalEndingKey === "FRACTURE") {
       safePlay(A.heartbeat, { restart: true, volume: 0.22 });
       await runTakeoverScene([
-        { text: "BREACH", style: "red", ms: 700, fx: { shake: true, red: true, static: true, flicker: true }, rainWords: ["YOU ARE HERE","IT KNOWS YOU","WRONG NAME","BREACH"], rainCount: 18, sound: A.heartbeat, wait: 540 },
+        { text: "FRACTURE", style: "red", ms: 700, fx: { shake: true, red: true, static: true, flicker: true }, rainWords: ["YOU ARE HERE","IT KNOWS YOU","WRONG NAME","FRACTURE"], rainCount: 18, sound: A.heartbeat, wait: 540 },
       ], "finalEndingScreen");
     } else {
       safePlay(A.sting, { restart: true, volume: 0.35 });
     }
 
-    await type($("finalEndingText"), `${endingText}
-
-Final Score: ${state.totalScore}/32`, 14);
+    await type($("finalEndingText"), `${f1}\n\n${f2}\n\nFinal Score: ${state.totalScore}/32`, 12);
 
     // Save leaderboard entry now (so it exists when they click)
     const lb = loadLB();
